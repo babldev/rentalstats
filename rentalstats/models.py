@@ -1,6 +1,8 @@
+import os
+
 import mongoengine as db
 
-connect(os.environ.get('MONGOHQ_DB', 'default'), os.environ.get('MONGOHQ_URL', 'localhost'))
+db.connect(os.environ.get('MONGOHQ_DB', 'default'), os.environ.get('MONGOHQ_URL', 'localhost'))
 
 class Listing(db.Document):
     url = db.URLField()
