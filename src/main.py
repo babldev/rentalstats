@@ -130,79 +130,75 @@ def getCountRows(neighborhoods):
 
 
 @app.route('/')
-class MainPage(webapp.RequestHandler):
-    def get(self):
-        path = os.path.join(os.path.dirname(__file__), 'index.html')
-        self.response.out.write(template.render(path, {}))
+def mainRoute():
+    path = os.path.join(os.path.dirname(__file__), 'index.html')
+    self.response.out.write(template.render(path, {}))
 
 
 @app.route('/count')
-class Count(webapp.RequestHandler):
-    def get(self):
-        path = os.path.join(os.path.dirname(__file__), 'chart.html')
-        rows = getCountRows(AXIS_NAMES)
-        template_values = {
-                           'title' : 'Total number of 1 bedrooms posted by neighborhood',
-                           'x_label' : 'Week',
-                           'axis_names' : AXIS_NAMES,
-                           'rows' : rows
-                           }
-        self.response.out.write(template.render(path, template_values))
+def countRoute():
+    path = os.path.join(os.path.dirname(__file__), 'chart.html')
+    rows = getCountRows(AXIS_NAMES)
+    template_values = {
+                       'title' : 'Total number of 1 bedrooms posted by neighborhood',
+                       'x_label' : 'Week',
+                       'axis_names' : AXIS_NAMES,
+                       'rows' : rows
+                       }
+    self.response.out.write(template.render(path, template_values))
 
 
 @app.route('/price')
-class AveragePrice(webapp.RequestHandler):
-    def get(self):
-        path = os.path.join(os.path.dirname(__file__), 'chart.html')
-        rows = getPriceRows(AXIS_NAMES)
-        template_values = {
-                           'title' : 'Average 1 bedroom rental price by neighborhood',
-                           'x_label' : 'Week',
-                           'axis_names' : AXIS_NAMES,
-                           'rows' : rows
-                           }
-        self.response.out.write(template.render(path, template_values))
+def priceRoute():
+    path = os.path.join(os.path.dirname(__file__), 'chart.html')
+    rows = getPriceRows(AXIS_NAMES)
+    template_values = {
+                       'title' : 'Average 1 bedroom rental price by neighborhood',
+                       'x_label' : 'Week',
+                       'axis_names' : AXIS_NAMES,
+                       'rows' : rows
+                       }
+    self.response.out.write(template.render(path, template_values))
 
 
 
 @app.route('/crawl')
-class Crawl(webapp.RequestHandler):
-    def get(self):
-        # Download the listings.
-        listings_html = urllib2.urlopen(BASE_URL).readlines()
+def crawlRoute():
+    # Download the listings.
+    listings_html = urllib2.urlopen(BASE_URL).readlines()
 
-        # Parse the listings.
-        matcher = re.compile(r'.*\<a href=\"(\S*)\"\>(.*)\<\/a\>')
-        num_listings = 0
-        for i in xrange(len(listings_html)):
-            line = listings_html[i]
-            match = matcher.match(line)
-            if match:
-                url = match.group(1)
-                title = unicode(match.group(2), 'utf-8')
-                price = getPrice(title)
-                bedrooms = getBedrooms(title)
+    # Parse the listings.
+    matcher = re.compile(r'.*\<a href=\"(\S*)\"\>(.*)\<\/a\>')
+    num_listings = 0
+    for i in xrange(len(listings_html)):
+        line = listings_html[i]
+        match = matcher.match(line)
+        if match:
+            url = match.group(1)
+            title = unicode(match.group(2), 'utf-8')
+            price = getPrice(title)
+            bedrooms = getBedrooms(title)
 
-                # Neighborhood is listed 2 lines down.
-                neighborhood_match = re.match('.*\((.*)\)', listings_html[i + 2])
-                if not neighborhood_match:
-                    continue
-                neighborhood = neighborhood_match.group(1)
+            # Neighborhood is listed 2 lines down.
+            neighborhood_match = re.match('.*\((.*)\)', listings_html[i + 2])
+            if not neighborhood_match:
+                continue
+            neighborhood = neighborhood_match.group(1)
 
-                if url and title and price and neighborhood and bedrooms:
-                    # Save the listing if it's new or missing information.
-                    listing = Listing.get_by_key_name(url)
-                    if not (listing and listing.url and listing.title and listing.price
-                                    and listing.neighborhood and listing.bedrooms):
-                        listing = Listing(key_name=url, url=url, title=title, price=price,
-                                                            neighborhood=neighborhood, bedrooms=bedrooms)
-                        listing.put()
-                        num_listings += 1
-        self.response.out.write('Listings: %d' % num_listings)
+            if url and title and price and neighborhood and bedrooms:
+                # Save the listing if it's new or missing information.
+                listing = Listing.get_by_key_name(url)
+                if not (listing and listing.url and listing.title and listing.price
+                                and listing.neighborhood and listing.bedrooms):
+                    listing = Listing(key_name=url, url=url, title=title, price=price,
+                                                        neighborhood=neighborhood, bedrooms=bedrooms)
+                    listing.put()
+                    num_listings += 1
+    self.response.out.write('Listings: %d' % num_listings)
 
-        # Save stats on the crawl.
-        stats = CrawlStats(num_listings=num_listings)
-        stats.put()
+    # Save stats on the crawl.
+    stats = CrawlStats(num_listings=num_listings)
+    stats.put()
 
 
 # Create the app.
