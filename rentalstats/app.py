@@ -54,18 +54,18 @@ AXIS_NAMES = [
               ]
 
 
-class Listing(db.Model):
-    url = db.LinkProperty()
-    title = db.StringProperty()
-    price = db.IntegerProperty()
-    time = db.DateTimeProperty(auto_now_add=True)
-    neighborhood = db.StringProperty()
-    bedrooms = db.IntegerProperty()
+# class Listing(db.Model):
+#     url = db.LinkProperty()
+#     title = db.StringProperty()
+#     price = db.IntegerProperty()
+#     time = db.DateTimeProperty(auto_now_add=True)
+#     neighborhood = db.StringProperty()
+#     bedrooms = db.IntegerProperty()
 
 
-class CrawlStats(db.Model):
-    time = db.DateTimeProperty(auto_now_add=True)
-    num_listings = db.IntegerProperty()
+# class CrawlStats(db.Model):
+#     time = db.DateTimeProperty(auto_now_add=True)
+#     num_listings = db.IntegerProperty()
 
 
 def getPrice(title):
@@ -130,6 +130,10 @@ def getCountRows(neighborhoods):
     return rows
 
 
+# Create the app.
+app = Flask(__name__)
+
+
 @app.route('/')
 def mainRoute():
     return render_template('index.html')
@@ -191,15 +195,13 @@ def crawlRoute():
                                                         neighborhood=neighborhood, bedrooms=bedrooms)
                     listing.put()
                     num_listings += 1
-    self.response.out.write('Listings: %d' % num_listings)
 
     # Save stats on the crawl.
     stats = CrawlStats(num_listings=num_listings)
     stats.put()
 
+    return 'Listings: {:d}'.format(num_listings)
 
-# Create the app.
-app = Flask(__name__)
 
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
