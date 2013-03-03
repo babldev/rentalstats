@@ -4,6 +4,7 @@ import re
 import urllib2
 
 from flask import Flask
+from flask import render_template
 
 BASE_URL = 'http://sfbay.craigslist.org/search/apa/sfc'
 
@@ -131,13 +132,11 @@ def getCountRows(neighborhoods):
 
 @app.route('/')
 def mainRoute():
-    path = os.path.join(os.path.dirname(__file__), 'index.html')
-    self.response.out.write(template.render(path, {}))
+    return render_template('index.html')
 
 
 @app.route('/count')
 def countRoute():
-    path = os.path.join(os.path.dirname(__file__), 'chart.html')
     rows = getCountRows(AXIS_NAMES)
     template_values = {
                        'title' : 'Total number of 1 bedrooms posted by neighborhood',
@@ -145,12 +144,11 @@ def countRoute():
                        'axis_names' : AXIS_NAMES,
                        'rows' : rows
                        }
-    self.response.out.write(template.render(path, template_values))
+    return render_template('chart.html', **template_values)
 
 
 @app.route('/price')
 def priceRoute():
-    path = os.path.join(os.path.dirname(__file__), 'chart.html')
     rows = getPriceRows(AXIS_NAMES)
     template_values = {
                        'title' : 'Average 1 bedroom rental price by neighborhood',
@@ -158,8 +156,7 @@ def priceRoute():
                        'axis_names' : AXIS_NAMES,
                        'rows' : rows
                        }
-    self.response.out.write(template.render(path, template_values))
-
+    return render_template('chart.html', **template_values)
 
 
 @app.route('/crawl')
