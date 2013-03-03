@@ -3,10 +3,7 @@ import os
 import re
 import urllib2
 
-from google.appengine.ext import db
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
+from flask import Flask
 
 BASE_URL = 'http://sfbay.craigslist.org/search/apa/sfc'
 
@@ -64,19 +61,23 @@ class Listing(db.Model):
     neighborhood = db.StringProperty()
     bedrooms = db.IntegerProperty()
 
+
 class CrawlStats(db.Model):
     time = db.DateTimeProperty(auto_now_add=True)
     num_listings = db.IntegerProperty()
+
 
 def getPrice(title):
     match = re.match(r'\$(\d*) ', title)
     if match:
         return int(match.group(1))
 
+
 def getBedrooms(title):
     match = re.match(r'\$\d* / (\d)br', title)
     if match:
         return int(match.group(1))
+
 
 def getPriceRows(neighborhoods):
     rows = []
@@ -107,6 +108,7 @@ def getPriceRows(neighborhoods):
 
     return rows
 
+
 def getCountRows(neighborhoods):
     rows = []
     for week in xrange(NUM_WEEKS):
@@ -127,11 +129,14 @@ def getCountRows(neighborhoods):
     return rows
 
 
+@app.route('/')
 class MainPage(webapp.RequestHandler):
     def get(self):
         path = os.path.join(os.path.dirname(__file__), 'index.html')
         self.response.out.write(template.render(path, {}))
 
+
+@app.route('/count')
 class Count(webapp.RequestHandler):
     def get(self):
         path = os.path.join(os.path.dirname(__file__), 'chart.html')
@@ -144,6 +149,8 @@ class Count(webapp.RequestHandler):
                            }
         self.response.out.write(template.render(path, template_values))
 
+
+@app.route('/price')
 class AveragePrice(webapp.RequestHandler):
     def get(self):
         path = os.path.join(os.path.dirname(__file__), 'chart.html')
@@ -157,6 +164,8 @@ class AveragePrice(webapp.RequestHandler):
         self.response.out.write(template.render(path, template_values))
 
 
+
+@app.route('/crawl')
 class Crawl(webapp.RequestHandler):
     def get(self):
         # Download the listings.
@@ -195,14 +204,11 @@ class Crawl(webapp.RequestHandler):
         stats = CrawlStats(num_listings=num_listings)
         stats.put()
 
-application = webapp.WSGIApplication([('/crawl', Crawl),
-                                      ('/price', AveragePrice),
-                                      ('/count', Count),
-                                      ('/', MainPage)],
-                                     debug=True)
 
-def main():
-    run_wsgi_app(application)
+# Create the app.
+app = Flask(__name__)
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    # Bind to PORT if defined, otherwise default to 5000.
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
