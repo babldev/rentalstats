@@ -63,7 +63,7 @@ class Listing(db.Model):
   time = db.DateTimeProperty(auto_now_add=True)
   neighborhood = db.StringProperty()
   bedrooms = db.IntegerProperty()
-  
+
 class CrawlStats(db.Model):
   time = db.DateTimeProperty(auto_now_add=True)
   num_listings = db.IntegerProperty()
@@ -90,7 +90,7 @@ def getPriceRows(neighborhoods):
       now = datetime.datetime.now()
       query.filter('time <', now - datetime.timedelta(7 * (NUM_WEEKS - week - 1)))
       query.filter('time >', now - datetime.timedelta(7 * (NUM_WEEKS - week)))
-      
+
       # Compute the mean price.
       num_listings = 0
       sum_price = 0
@@ -119,13 +119,13 @@ def getCountRows(neighborhoods):
       now = datetime.datetime.now()
       query.filter('time <', now - datetime.timedelta(7 * (NUM_WEEKS - week - 1)))
       query.filter('time >', now - datetime.timedelta(7 * (NUM_WEEKS - week)))
-      
+
       row.append(query.count())
 
     rows.append(row)
 
   return rows
-  
+
 
 class MainPage(webapp.RequestHandler):
   def get(self):
@@ -155,7 +155,7 @@ class AveragePrice(webapp.RequestHandler):
                        'rows' : rows
                        }
     self.response.out.write(template.render(path, template_values))
-    
+
 
 class Crawl(webapp.RequestHandler):
   def get(self):
@@ -173,13 +173,13 @@ class Crawl(webapp.RequestHandler):
         title = unicode(match.group(2), 'utf-8')
         price = getPrice(title)
         bedrooms = getBedrooms(title)
-        
+
         # Neighborhood is listed 2 lines down.
         neighborhood_match = re.match('.*\((.*)\)', listings_html[i + 2])
         if not neighborhood_match:
           continue
         neighborhood = neighborhood_match.group(1)
-        
+
         if url and title and price and neighborhood and bedrooms:
           # Save the listing if it's new or missing information.
           listing = Listing.get_by_key_name(url)
@@ -190,7 +190,7 @@ class Crawl(webapp.RequestHandler):
             listing.put()
             num_listings += 1
     self.response.out.write('Listings: %d' % num_listings)
-    
+
     # Save stats on the crawl.
     stats = CrawlStats(num_listings=num_listings)
     stats.put()
