@@ -6,7 +6,7 @@ import urllib2
 from flask import Flask
 from flask import render_template
 
-BASE_URL = 'http://sfbay.craigslist.org/search/apa/sfc'
+BASE_URL = 'http://sfbay.craigslist.org/sfc/apa/'
 
 NUM_WEEKS = 24
 
